@@ -44,32 +44,22 @@ const addEntries = async (req, res) => {
   // });
 };
 
-const updateEntry = (req, res) => {
-  const { id } = req.params;
-  const { name, email, age } = req.body;
+const updateEntry = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, age } = req.body;
 
-  if (!id) return res.status(400).send("Student ID is required");
-  if (!name && !email && age === undefined)
-    return res.status(400).send("At least one field is required to update");
-  const updateQuery =
-    "update students set name = ?,email = ?, age = ? where id = ?";
-
-  db.execute(
-    updateQuery,
-    [name || null, email || null, age ?? null, id],
-    (err, result) => {
-      if (err) {
-        console.log(err.message);
-        res.status(500).send(err.message);
-        return;
-      }
-      if (result.affectedRows == 0) {
-        res.status(404).send("Student not found");
-        return;
-      }
-      res.status(200).send(`User has benn updated`);
+    const student = await Student.findByPk(id);
+    if (!student) {
+      res.status(404).send(`User not found`);
     }
-  );
+
+    student.name=name;
+    await student.save();
+    res.status(200).send(`User has been updated!`);
+  } catch (error) {
+    res.status(500).send(`User cannot be updated`);
+  }
 };
 
 const deleteEntry = (req, res) => {
