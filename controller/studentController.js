@@ -1,5 +1,5 @@
 const db = require("../utils/db-connection");
-
+const Student = require("../models/students");
 const getStudent = (req, res) => {
   const query = "select * from students";
   db.execute(query, (err, rows) => {
@@ -18,20 +18,30 @@ const getStudentById = (req, res) => {
   });
 };
 
-const addEntries = (req, res) => {
-  const { email, name, age } = req.body;
+const addEntries = async (req, res) => {
+  try {
+    const { email, name, age } = req.body;
+    const student = await Student.create({
+      email: email,
+      name: name,
+      age: age,
+    });
+    res.status(201).send(`User with name: ${Student.name} is created`);
+  } catch (error) {
+    res.status(500).send(`unable to make an entry`);
+  }
 
-  const insertQuery = "insert into students(email,name,age) values(?,?,?)";
+  // const insertQuery = "insert into students(email,name,age) values(?,?,?)";
 
-  db.execute(insertQuery, [email, name, age], (err) => {
-    if (err) {
-      console.log(err.message);
-      res.status(500).send(err.message);
-      return;
-    }
-    console.log("Values has been inserted");
-    res.status(200).send(`Student with name ${name} successfully added`);
-  });
+  // db.execute(insertQuery, [email, name, age], (err) => {
+  //   if (err) {
+  //     console.log(err.message);
+  //     res.status(500).send(err.message);
+  //     return;
+  //   }
+  //   console.log("Values has been inserted");
+  //   res.status(200).send(`Student with name ${name} successfully added`);
+  // });
 };
 
 const updateEntry = (req, res) => {
@@ -44,18 +54,22 @@ const updateEntry = (req, res) => {
   const updateQuery =
     "update students set name = ?,email = ?, age = ? where id = ?";
 
-  db.execute(updateQuery, [name || null, email || null, age ?? null, id], (err, result) => {
-    if (err) {
-      console.log(err.message);
-      res.status(500).send(err.message);
-      return;
+  db.execute(
+    updateQuery,
+    [name || null, email || null, age ?? null, id],
+    (err, result) => {
+      if (err) {
+        console.log(err.message);
+        res.status(500).send(err.message);
+        return;
+      }
+      if (result.affectedRows == 0) {
+        res.status(404).send("Student not found");
+        return;
+      }
+      res.status(200).send(`User has benn updated`);
     }
-    if (result.affectedRows == 0) {
-      res.status(404).send("Student not found");
-      return;
-    }
-    res.status(200).send(`User has benn updated`);
-  });
+  );
 };
 
 const deleteEntry = (req, res) => {
