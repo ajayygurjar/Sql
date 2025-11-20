@@ -62,22 +62,24 @@ const updateEntry = async (req, res) => {
   }
 };
 
-const deleteEntry = (req, res) => {
-  const { id } = req.params;
-  const deleteQuery = "delete from students where id=?";
+const deleteEntry = async(req, res) => {
+  try {
+    const { id } = req.params;
+    const student=await Student.destroy({
+      where:{
+        id:id
+      }
+    })
+    if(!student){
+      res.status(404).send(`User not found`);
+    }
+    res.status(200).send(`User is deleted`)
+  } catch (error) {
+    console.log(error)
+    res.status(500).send(`Error encountered while deleting.`)
+    
+  }
 
-  db.execute(deleteQuery, [id], (err, result) => {
-    if (err) {
-      console.log(err.message);
-      res.status(500).send("delete request failed");
-      return;
-    }
-    if (result.affectedRows === 0) {
-      res.status(404).send(`student not found`);
-      return;
-    }
-    res.status(200).send(`User with ${id} is deleted`);
-  });
 };
 
 module.exports = {
