@@ -1,23 +1,34 @@
 const db = require("../utils/db-connection");
 const Student = require("../models/students");
-const getStudent = (req, res) => {
-  const query = "select * from students";
-  db.execute(query, (err, rows) => {
-    if (err) return res.status(500).send(`Database Error`);
-    res.status(200).json(rows);
-  });
+
+
+//Get all student using sequelize
+const getStudent = async(req, res) => {
+  try {
+    const students = await Student.findAll();
+    res.status(200).json(students);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Database Error");
+  }
 };
 
-const getStudentById = (req, res) => {
-  const query = "select * from students where id=?";
-  db.execute(query, [req.params.id], (err, rows) => {
-    if (err) return res.status(500).send(`Database error`);
-    if (rows.length === 0)
-      return res.status(404).send(`Student data not found`);
-    res.status(200).json(rows[0]);
-  });
+//Get student by id using sequelize
+const getStudentById =async (req, res) => {
+   try {
+    const { id } = req.params;
+    const student = await Student.findByPk(id);
+    if (!student) {
+      return res.status(404).send("Student data not found");
+    }
+    res.status(200).json(student);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Database Error");
+  }
 };
 
+//Post request using sequelize adding student
 const addEntries = async (req, res) => {
   try {
     const { email, name, age } = req.body;
@@ -30,19 +41,10 @@ const addEntries = async (req, res) => {
   } catch (error) {
     res.status(500).send(`unable to make an entry`);
   }
-
-  // const insertQuery = "insert into students(email,name,age) values(?,?,?)";
-
-  // db.execute(insertQuery, [email, name, age], (err) => {
-  //   if (err) {
-  //     console.log(err.message);
-  //     res.status(500).send(err.message);
-  //     return;
-  //   }
-  //   console.log("Values has been inserted");
-  //   res.status(200).send(`Student with name ${name} successfully added`);
-  // });
 };
+
+
+//Put request using sequelize updating student
 
 const updateEntry = async (req, res) => {
   try {
@@ -62,6 +64,9 @@ const updateEntry = async (req, res) => {
   }
 };
 
+
+
+//Delete request using sequelize deleting student
 const deleteEntry = async(req, res) => {
   try {
     const { id } = req.params;
